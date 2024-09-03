@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lift Simulator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- landing page where user input the number of floors and the number of lifts -->
+    <div id="landing-page">
+      <h1>Lift Simulator</h1>
+      <form id="lift-form">
+        <div>
+          <label for="floors" class="label-text"
+            >Enter number of floors (1-10)</label
+          >
+          <input type="number" id="floors" max="10" min="1" value="5" />
+        </div>
+        <div>
+          <label for="lifts" class="label-text"
+            >Enter number of lifts (1-10)</label
+          >
+          <input type="number" id="lifts" max="10" min="1" value="5" />
+        </div>
+        <button type="submit" id="start-simulation">Start</button>
+      </form>
+    </div>
+    <!-- end of landing page -->
+
+    <!-- simulation page -->
+    <div id="simulation-page">
+      <h1>Lift Simulator</h1>
+
+      <div class="floor-container">
+        <!-- <div class="floor">
+          <div class="control-btns">
+            <button class="up-btn">Up</button>
+            <button class="down-btn">Down</button>
+          </div>
+
+          <div class="floor-ground">
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+            <div class="lift"></div>
+          </div>
+        </div>
+
+        <div class="floor">
+          <div class="control-btns">
+            <button class="up-btn">Up</button>
+            <button class="down-btn">Down</button>
+          </div>
+
+          <div class="floor-ground"></div>
+        </div>
+
+        <div class="floor">
+          <div class="control-btns">
+            <button class="up-btn">Up</button>
+            <button class="down-btn">Down</button>
+          </div>
+
+          <div class="floor-ground"></div>
+        </div> -->
+      </div>
+    </div>
+    <!-- end of simulation page -->
+    <script src="main.js"></script>
+  </body>
+</html>
