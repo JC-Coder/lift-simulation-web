@@ -4,6 +4,8 @@
 
 The Lift Simulator is a web-based application that simulates the operation of multiple lifts in a building. It allows users to specify the number of floors and lifts, and then interact with the lifts by calling them to different floors.
 
+Access live site : https://jc-lift-sim.netlify.app/
+
 ## Features
 
 1. Customizable building setup (number of floors and lifts)
