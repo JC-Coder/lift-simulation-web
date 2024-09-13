@@ -10,6 +10,7 @@ const maxLifts = 10;
 const minFloors = 1;
 const minLifts = 1;
 let positionPerMove = 106; // will translate y axis by 105px
+const movementTransitionPerFloorInSeconds = 2;
 
 let gameFloors = 0;
 
@@ -39,7 +40,7 @@ const handleStartSimulation = (e) => {
   const liftsVal = lifts.value;
 
   // validate the input
-  if (floorsVal < minFloors || floorsVal > maxFloors) {
+  if (floorsVal <= minFloors || floorsVal > maxFloors) {
     alert('Please enter a valid number of floors');
     return;
   }
@@ -53,7 +54,6 @@ const handleStartSimulation = (e) => {
   gameFloors = floorsVal;
 
   // start the simulation
-  console.log('Starting the lift simulation');
 
   // show the simulation page and hide the landing page
   simulationPage.style.display = 'block';
@@ -139,35 +139,11 @@ const handleCreateLiftAndFloor = ({ lifts, floors }) => {
   }
 };
 
-const handleMoveLift = (currentFloorNumber, direction) => {
-  console.log('currentFloorNumber', currentFloorNumber);
-  console.log('direction', direction);
-
-  const floorToMove = parseInt(
-    prompt('Enter the floor number to move the lift to')
-  );
-
-  // ensure user don't move to the same floor
-  if (currentFloorNumber === floorToMove) {
-    alert('You are already on this floor');
-    return;
-  }
-
-  // check if direction is down and is above user current floor
-  if (direction === 'down' && currentFloorNumber < floorToMove) {
-    alert('If you need to move to the top floor, please press the up button');
-    return;
-  }
-
-  // ensure user cannot move to a floor that is not in the building
-  if (floorToMove < 1 || floorToMove > gameFloors) {
-    alert('Please enter a valid floor number');
-    return;
-  }
+const handleMoveLift = (currentFloorNumber) => {
+  const floorToMove = currentFloorNumber;
 
   // get closest and available lift
   const availableLifts = liftsData.filter((lift) => lift.isAvailable);
-  console.log('availableLifts', availableLifts);
 
   if (availableLifts.length === 0) {
     alert('No lifts are currently available. Please wait.');
@@ -180,36 +156,15 @@ const handleMoveLift = (currentFloorNumber, direction) => {
       ? lift
       : closest;
   });
-  console.log('closestLift', closestLift);
 
   // Mark the lift as unavailable immediately
   closestLift.isAvailable = false;
 
-  let floorsToIterate = [];
-  const userFloor = currentFloorNumber;
-  const destinationFloor = floorToMove;
-
-  if (closestLift.currentFloorNumber !== userFloor) {
-    floorsToIterate.push(userFloor);
-  }
-  floorsToIterate.push(destinationFloor);
-
-  console.log('floorsToIterate', floorsToIterate);
-
-  moveLiftToFloors(closestLift, floorsToIterate, direction);
+  // move lift to floor
+  moveLiftToFloor(closestLift, floorToMove);
 };
 
-const moveLiftToFloors = (lift, floors) => {
-  let currentFloor = lift.currentFloorNumber;
-
-  const showMessage = (message) => {
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message';
-    messageElement.textContent = message;
-    document.body.appendChild(messageElement);
-    setTimeout(() => messageElement.remove(), 2000);
-  };
-
+const moveLiftToFloor = (lift, floor) => {
   const liftElement = document.querySelector(
     `.lift[data-lift-id="${lift.id}"]`
   );
@@ -224,72 +179,48 @@ const moveLiftToFloors = (lift, floors) => {
     lift.isDoorOpen = false;
   };
 
-  const moveLiftToNextFloor = (index) => {
-    if (index >= floors.length) {
-      lift.isMoving = false;
-      lift.direction = 'idle';
-      lift.isAvailable = true; // Make the lift available again
+  const floorDiff = Math.abs(floor - lift.currentFloorNumber);
+  const moveDirection = floor > lift.currentFloorNumber ? 'up' : 'down';
+  const totalTranslate = getTotalTranslateViaFloorAndDirection(floor);
+
+  const totalTimeToMove = floorDiff * 2; // 2 seconds per floor
+
+  // Open and close doors at the starting floor
+  openDoors();
+  setTimeout(() => {
+    closeDoors();
+
+    if (lift.currentFloorNumber === floor) {
+      setTimeout(() => {
+        lift.isAvailable = true;
+      }, 1000);
+
       return;
     }
 
-    const nextFloor = floors[index];
-
-    const moveToFloor = () => {
-      const floorDiff = nextFloor - currentFloor;
-      const moveDirection = floorDiff > 0 ? 'up' : 'down';
-      const totalTranslate = getTotalTranslateViaFloorAndDirection(nextFloor);
-
+    // Start moving after doors close
+    setTimeout(() => {
       lift.isMoving = true;
       lift.direction = moveDirection;
-      liftElement.style.transition = 'transform 2s ease';
+      liftElement.style.transition = `transform ${totalTimeToMove}s linear`;
       liftElement.style.transform = `translateY(${totalTranslate}px)`;
 
+      // Open and close doors at the destination floor
       setTimeout(() => {
-        currentFloor = nextFloor;
-        lift.currentFloorNumber = nextFloor;
-        lift.currentPosition = totalTranslate;
         lift.isMoving = false;
-
+        lift.currentFloorNumber = floor;
+        lift.direction = 'idle';
         openDoors();
-        if (index === 0 && floors.length > 1) {
-          showMessage(
-            `Lift ${lift.id} picking up user at floor ${currentFloor}`
-          );
-        } else if (index === floors.length - 1) {
-          showMessage(
-            `Lift ${lift.id} dropping off user at floor ${currentFloor}`
-          );
-        }
 
         setTimeout(() => {
           closeDoors();
           setTimeout(() => {
-            moveLiftToNextFloor(index + 1);
+            lift.isAvailable = true;
           }, 1000);
         }, 2000);
-      }, 2000);
-    };
-
-    if (currentFloor === nextFloor) {
-      openDoors();
-      showMessage(`Lift ${lift.id} at floor ${currentFloor}`);
-      setTimeout(() => {
-        closeDoors();
-        setTimeout(() => {
-          moveLiftToNextFloor(index + 1);
-        }, 1000);
-      }, 2000);
-    } else {
-      if (lift.isDoorOpen) {
-        closeDoors();
-        setTimeout(moveToFloor, 1000);
-      } else {
-        moveToFloor();
-      }
-    }
-  };
-
-  moveLiftToNextFloor(0);
+      }, totalTimeToMove * 1000);
+    }, 1000);
+  }, 2000);
 };
 
 const getTotalTranslateViaFloorAndDirection = (destinationFloor) => {
