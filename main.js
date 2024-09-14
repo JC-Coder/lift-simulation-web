@@ -27,7 +27,8 @@ const liftStructure = {
 const floorStructure = {
   id: 0,
   floorNumber: 0,
-  liftsOnFloor: []
+  liftsOnFloor: [],
+  liftCurrentlyProcessing: false
 };
 
 const liftsData = [];
@@ -86,7 +87,8 @@ const handleCreateLiftAndFloor = ({ lifts, floors }) => {
     const floor = {
       id: i + 1,
       floorNumber,
-      liftsOnFloor: []
+      liftsOnFloor: [],
+      liftCurrentlyProcessing: false
     };
 
     floorsData.push(floor);
@@ -139,9 +141,7 @@ const handleCreateLiftAndFloor = ({ lifts, floors }) => {
   }
 };
 
-const handleMoveLift = (currentFloorNumber) => {
-  const floorToMove = currentFloorNumber;
-
+const handleMoveLift = (floorToMove) => {
   // get closest and available lift
   const availableLifts = liftsData.filter((lift) => lift.isAvailable);
 
@@ -151,20 +151,33 @@ const handleMoveLift = (currentFloorNumber) => {
   }
 
   const closestLift = availableLifts.reduce((closest, lift) => {
-    return Math.abs(lift.currentFloorNumber - currentFloorNumber) <
-      Math.abs(closest.currentFloorNumber - currentFloorNumber)
+    return Math.abs(lift.currentFloorNumber - floorToMove) <
+      Math.abs(closest.currentFloorNumber - floorToMove)
       ? lift
       : closest;
   });
 
   // Mark the lift as unavailable immediately
-  closestLift.isAvailable = false;
+  // closestLift.isAvailable = false;
 
   // move lift to floor
   moveLiftToFloor(closestLift, floorToMove);
 };
 
 const moveLiftToFloor = (lift, floor) => {
+  const floorObject = floorsData.find((f) => f.floorNumber == floor);
+
+  // check if there is an active lift on the floor
+  if (floorObject.liftCurrentlyProcessing) {
+    return;
+  }
+
+  // mark lift as unavailable
+  lift.isAvailable = false;
+
+  // mark the floor as processing
+  floorObject.liftCurrentlyProcessing = true;
+
   const liftElement = document.querySelector(
     `.lift[data-lift-id="${lift.id}"]`
   );
@@ -193,6 +206,7 @@ const moveLiftToFloor = (lift, floor) => {
     if (lift.currentFloorNumber === floor) {
       setTimeout(() => {
         lift.isAvailable = true;
+        floorObject.liftCurrentlyProcessing = false;
       }, 1000);
 
       return;
@@ -214,6 +228,8 @@ const moveLiftToFloor = (lift, floor) => {
 
         setTimeout(() => {
           closeDoors();
+
+          floorObject.liftCurrentlyProcessing = false;
           setTimeout(() => {
             lift.isAvailable = true;
           }, 1000);
