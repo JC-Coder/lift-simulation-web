@@ -199,44 +199,53 @@ const moveLiftToFloor = (lift, floor) => {
   const totalTimeToMove = floorDiff * 2; // 2 seconds per floor
 
   // Open and close doors at the starting floor
-  openDoors();
-  setTimeout(() => {
-    closeDoors();
+  const isLiftAlreadyOnTheFloor = lift.currentFloorNumber === floor;
+  if (isLiftAlreadyOnTheFloor) {
+    openDoors();
+  }
 
-    if (lift.currentFloorNumber === floor) {
-      setTimeout(() => {
-        lift.isAvailable = true;
-        floorObject.liftCurrentlyProcessing = false;
-      }, 1000);
+  setTimeout(
+    () => {
+      if (isLiftAlreadyOnTheFloor) {
+        closeDoors();
+      }
 
-      return;
-    }
-
-    // Start moving after doors close
-    setTimeout(() => {
-      lift.isMoving = true;
-      lift.direction = moveDirection;
-      liftElement.style.transition = `transform ${totalTimeToMove}s linear`;
-      liftElement.style.transform = `translateY(${totalTranslate}px)`;
-
-      // Open and close doors at the destination floor
-      setTimeout(() => {
-        lift.isMoving = false;
-        lift.currentFloorNumber = floor;
-        lift.direction = 'idle';
-        openDoors();
-
+      if (lift.currentFloorNumber === floor) {
         setTimeout(() => {
-          closeDoors();
-
+          lift.isAvailable = true;
           floorObject.liftCurrentlyProcessing = false;
+        }, 1000);
+
+        return;
+      }
+
+      // Start moving after doors close
+      setTimeout(() => {
+        lift.isMoving = true;
+        lift.direction = moveDirection;
+        liftElement.style.transition = `transform ${totalTimeToMove}s linear`;
+        liftElement.style.transform = `translateY(${totalTranslate}px)`;
+
+        // Open and close doors at the destination floor
+        setTimeout(() => {
+          lift.isMoving = false;
+          lift.currentFloorNumber = floor;
+          lift.direction = 'idle';
+          openDoors();
+
           setTimeout(() => {
-            lift.isAvailable = true;
-          }, 1000);
-        }, 2000);
-      }, totalTimeToMove * 1000);
-    }, 1000);
-  }, 2000);
+            closeDoors();
+
+            floorObject.liftCurrentlyProcessing = false;
+            setTimeout(() => {
+              lift.isAvailable = true;
+            }, 1000);
+          }, 2000);
+        }, totalTimeToMove * 1000);
+      }, 1000);
+    },
+    isLiftAlreadyOnTheFloor ? 2000 : 0
+  );
 };
 
 const getTotalTranslateViaFloorAndDirection = (destinationFloor) => {
